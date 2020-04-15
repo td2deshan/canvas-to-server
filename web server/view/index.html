@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
+    <title>TD</title>
+</head>
+<body>
+
+	<video id="player" controls autoplay></video>
+	<button id="capture">Capture</button>
+	<canvas id="canvas" width=320 height=240></canvas>
+
+
+	<button id="analyze-button" onclick=upload()>analyze</button>
+
+	 <form method="post" accept-charset="utf-8" name="form1">
+				<input name="file" id='data' type="hidden"/>
+	 </form>
+
+	<h2 id="result-label">result</h2>
+	
+<script>
+  const player = document.getElementById('player');
+  const inp = document.getElementById('file-input');
+  const canvas = document.getElementById('canvas');
+  const context = canvas.getContext('2d');
+ 
+  const captureButton = document.getElementById('capture');
+
+  const constraints = {
+    video: true,
+  };
+
+  captureButton.addEventListener('click', () => {
+    // Draw the video frame to the canvas.
+    context.drawImage(player, 0, 0, canvas.width, canvas.height);
+  });
+
+  // Attach the video stream to the video element and autoplay.
+  navigator.mediaDevices.getUserMedia(constraints)
+    .then((stream) => {
+      player.srcObject = stream;
+    });
+	
+
+function upload() {
+                document.getElementById('result-label').innerHTML = "analyzing...";
+
+                var canvas = document.getElementById("canvas");
+                var dataURL = canvas.toDataURL("image/png");
+                document.getElementById('data').value = dataURL;
+                var fd = new FormData(document.forms["form1"]);
+ 
+                var xhr = new XMLHttpRequest({mozSystem: true});
+                var loc = window.location;
+                //xhr.open('POST', 'http://127.0.0.1:5000/analyze', true);
+                xhr.open('POST', `${loc.protocol}//${loc.hostname}:${loc.port}/analyze`, true);
+
+                xhr.onerror = function() {
+                    alert(xhr.responseText);
+                  };
+
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState == XMLHttpRequest.DONE) {
+                        var response = JSON.parse(xhr.responseText);
+                        document.getElementById('result-label').innerHTML = response["result"];
+                    }
+                }
+   
+                xhr.onload = function() {
+ 
+                };
+                xhr.send(fd);
+            };
+		
+
+</script>
+</body>
+</html>
